@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Menu Principal — App de Garantias MILL</title>
+    <meta name="description" content="Menu Principal do Sistema de Garantias MILL INDÚSTRIAS"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/menu" class="header-logo">
+        <span class="logo-mark">MILL</span>
+        <span class="logo-sep"></span>
+        <span class="logo-app">App de Garantias</span>
+    </a>
+    <span class="header-title">Menu Principal</span>
+    <div class="header-actions">
+        <span class="user-info" sec:authentication="name">Usuário</span>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" id="btn-logout" class="btn btn-secondary btn-sm">⇠ Sair</button>
+        </form>
+    </div>
+</header>
+
+<main class="menu-page">
+    <div>
+        <h1 class="menu-title"><span>MENU</span> PRINCIPAL</h1>
+        <p class="menu-subtitle">Sistema de Gestão de Garantias — MILL INDÚSTRIAS</p>
+    </div>
+
+    <div class="menu-cards">
+        <a href="/garantia" id="btn-menu-garantia" class="menu-card">
+            <span class="card-icon">🛡️</span>
+            <div class="card-title">Análise de Garantia</div>
+            <div class="card-desc">Solicitações e decisões de garantia</div>
+        </a>
+
+        <a href="/reclamacoes" id="btn-menu-reclamacoes" class="menu-card">
+            <span class="card-icon">📋</span>
+            <div class="card-title">Reclamações</div>
+            <div class="card-desc">Reclamações de clientes</div>
+        </a>
+
+        <a href="/qualidade" id="btn-menu-qualidade" class="menu-card">
+            <span class="card-icon">🔬</span>
+            <div class="card-title">Análises de Qualidade</div>
+            <div class="card-desc">Laudos e análises técnicas</div>
+        </a>
+    </div>
+</main>
+
+</body>
+</html>

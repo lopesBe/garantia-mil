@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${titulo} + ' — MILL'">Análise de Qualidade — MILL</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/menu" class="header-logo">
+        <span class="logo-mark">MILL</span>
+        <span class="logo-sep"></span>
+        <span class="logo-app">App de Garantias</span>
+    </a>
+    <span class="header-title" th:text="${titulo}">Análise de Qualidade</span>
+    <div class="header-actions">
+        <span class="user-info" sec:authentication="name">Usuário</span>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-secondary btn-sm">⇠ Sair</button>
+        </form>
+    </div>
+</header>
+
+<main class="page-wrapper">
+    <nav class="breadcrumb">
+        <a href="/menu">Menu</a>
+        <span class="sep">›</span>
+        <a href="/qualidade">Análises de Qualidade</a>
+        <span class="sep">›</span>
+        <span class="current" th:text="${titulo}">Formulário</span>
+    </nav>
+
+    <div class="page-header">
+        <h1 class="page-title" th:text="${titulo}">Análise</h1>
+    </div>
+
+    <div th:if="${sucesso}" class="alert alert-success">
+        <span>✓</span><span th:text="${sucesso}"></span>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger">
+        <span>✗</span><span th:text="${erro}"></span>
+    </div>
+
+    <form th:action="@{/qualidade/salvar}" method="post" id="form-analise">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:value="${analise.id}"/>
+
+        <!-- SEÇÃO 1: Identificação -->
+        <div class="form-card" style="margin-bottom:20px;">
+            <div class="form-card-header">
+                <span class="section-icon">🔬</span>
+                <h3>Identificação da Análise</h3>
+            </div>
+            <div class="form-card-body">
+                <div class="form-grid form-grid-2">
+                    <div class="form-group">
+                        <label>Número da Análise</label>
+                        <input type="text" class="form-control"
+                               th:value="${analise.numero != null ? analise.numero : 'Gerado automaticamente'}"
+                               readonly style="opacity:0.6;cursor:default;"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataAnalise">Data da Análise *</label>
+                        <input type="date" id="dataAnalise" name="dataAnalise" class="form-control" required
+                               th:value="${analise.dataAnalise}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="responsavelTecnico">Responsável Técnico *</label>
+                        <input type="text" id="responsavelTecnico" name="responsavelTecnico" class="form-control" required
+                               placeholder="Nome do responsável técnico"
+                               th:value="${analise.responsavelTecnico}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status da Análise *</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="Em Andamento"      th:selected="${analise.status == 'Em Andamento'}">Em Andamento</option>
+                            <option value="Concluída"         th:selected="${analise.status == 'Concluída'}">Concluída</option>
+                            <option value="Aguardando Retorno" th:selected="${analise.status == 'Aguardando Retorno'}">Aguardando Retorno</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reclamacaoId">Reclamação Vinculada</label>
+                        <select id="reclamacaoId" name="reclamacaoId" class="form-control">
+                            <option value="">— Nenhuma —</option>
+                            <option th:each="rec : ${reclamacoes}"
+                                    th:value="${rec.id}"
+                                    th:text="${rec.numero + ' — ' + rec.nomeCliente}"
+                                    th:selected="${analise.reclamacao != null and analise.reclamacao.id == rec.id}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="garantiaId">Garantia Vinculada</label>
+                        <select id="garantiaId" name="garantiaId" class="form-control">
+                            <option value="">— Nenhuma —</option>
+                            <option th:each="gar : ${garantias}"
+                                    th:value="${gar.id}"
+                                    th:text="${gar.numero + ' — ' + gar.nomeCliente}"
+                                    th:selected="${analise.garantia != null and analise.garantia.id == gar.id}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: Produto Analisado -->
+        <div class="form-card" style="margin-bottom:20px;">
+            <div class="form-card-header">
+                <span class="section-icon">📦</span>
+                <h3>Produto Analisado</h3>
+            </div>
+            <div class="form-card-body">
+                <div class="form-grid form-grid-2">
+                    <div class="form-group">
+                        <label for="codigoProduto">Código do Produto</label>
+                        <input type="text" id="codigoProduto" name="codigoProduto" class="form-control"
+                               placeholder="CÓD-001" th:value="${analise.codigoProduto}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricaoProduto">Descrição do Produto *</label>
+                        <input type="text" id="descricaoProduto" name="descricaoProduto" class="form-control" required
+                               placeholder="Descrição completa do produto"
+                               th:value="${analise.descricaoProduto}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="loteSerie">Lote / Série</label>
+                        <input type="text" id="loteSerie" name="loteSerie" class="form-control"
+                               placeholder="LOTE-2024-A" th:value="${analise.loteSerie}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataFabricacao">Data de Fabricação</label>
+                        <input type="date" id="dataFabricacao" name="dataFabricacao" class="form-control"
+                               th:value="${analise.dataFabricacao}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 3: Resultado da Análise -->
+        <div class="form-card" style="margin-bottom:20px;">
+            <div class="form-card-header">
+                <span class="section-icon">📊</span>
+                <h3>Resultado da Análise</h3>
+            </div>
+            <div class="form-card-body">
+                <div class="form-grid form-grid-2">
+                    <div class="form-group col-span-2">
+                        <label for="evidencias">Evidências Encontradas</label>
+                        <textarea id="evidencias" name="evidencias" class="form-control" rows="4"
+                                  placeholder="Descreva as evidências e não conformidades identificadas durante a análise..."
+                                  th:text="${analise.evidencias}"></textarea>
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label for="causaRaiz">Causa Raiz Identificada</label>
+                        <textarea id="causaRaiz" name="causaRaiz" class="form-control" rows="4"
+                                  placeholder="Qual foi a causa raiz identificada para o defeito/problema?"
+                                  th:text="${analise.causaRaiz}"></textarea>
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label for="conclusaoTecnica">Conclusão Técnica</label>
+                        <textarea id="conclusaoTecnica" name="conclusaoTecnica" class="form-control" rows="4"
+                                  placeholder="Conclusão técnica baseada nas evidências e análises realizadas..."
+                                  th:text="${analise.conclusaoTecnica}"></textarea>
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label for="acaoCorretiva">Ação Corretiva Proposta</label>
+                        <textarea id="acaoCorretiva" name="acaoCorretiva" class="form-control" rows="4"
+                                  placeholder="Quais ações corretivas foram propostas para evitar recorrência?"
+                                  th:text="${analise.acaoCorretiva}"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="d-flex gap-8">
+            <button type="submit" id="btn-salvar" class="btn btn-primary">💾 Salvar</button>
+            <a href="/qualidade" class="btn btn-secondary">✕ Cancelar</a>
+        </div>
+    </form>
+</main>
+
+</body>
+</html>

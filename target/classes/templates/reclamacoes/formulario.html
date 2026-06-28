@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${titulo} + ' — MILL'">Reclamação — MILL</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="app-header">
+    <a href="/menu" class="header-logo">
+        <span class="logo-mark">MILL</span>
+        <span class="logo-sep"></span>
+        <span class="logo-app">App de Garantias</span>
+    </a>
+    <span class="header-title" th:text="${titulo}">Reclamação</span>
+    <div class="header-actions">
+        <span class="user-info" sec:authentication="name">Usuário</span>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn btn-secondary btn-sm">⇠ Sair</button>
+        </form>
+    </div>
+</header>
+
+<main class="page-wrapper">
+    <nav class="breadcrumb">
+        <a href="/menu">Menu</a>
+        <span class="sep">›</span>
+        <a href="/reclamacoes">Reclamações</a>
+        <span class="sep">›</span>
+        <span class="current" th:text="${titulo}">Formulário</span>
+    </nav>
+
+    <div class="page-header">
+        <h1 class="page-title" th:text="${titulo}">Reclamação</h1>
+    </div>
+
+    <div th:if="${sucesso}" class="alert alert-success">
+        <span>✓</span><span th:text="${sucesso}"></span>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger">
+        <span>✗</span><span th:text="${erro}"></span>
+    </div>
+
+    <form th:action="@{/reclamacoes/salvar}" method="post" id="form-reclamacao">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:value="${reclamacao.id}"/>
+
+        <!-- Layout 2 colunas -->
+        <div class="form-layout-2col">
+
+            <!-- COLUNA ESQUERDA: Dados do Cliente -->
+            <div>
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <span class="section-icon">👤</span>
+                        <h3>Dados do Cliente</h3>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label for="numero">Número da Reclamação</label>
+                                <input type="text" id="numero" class="form-control"
+                                       th:value="${reclamacao.numero != null ? reclamacao.numero : 'Gerado automaticamente'}"
+                                       readonly style="opacity:0.6; cursor:default;"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="cnpjCliente">CNPJ do Cliente</label>
+                                <input type="text" id="cnpjCliente" name="cnpjCliente"
+                                       class="form-control"
+                                       placeholder="00.000.000/0000-00"
+                                       th:value="${reclamacao.cnpjCliente}"/>
+                            </div>
+
+                            <div class="form-group col-span-2">
+                                <label for="nomeCliente">Nome do Cliente *</label>
+                                <input type="text" id="nomeCliente" name="nomeCliente"
+                                       class="form-control" required
+                                       placeholder="Razão social completa"
+                                       th:value="${reclamacao.nomeCliente}"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" id="cidade" name="cidade"
+                                       class="form-control" placeholder="Cidade"
+                                       th:value="${reclamacao.cidade}"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">Estado</label>
+                                <select id="estado" name="estado" class="form-control">
+                                    <option value="">UF</option>
+                                    <option th:each="uf : ${ {'AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'} }"
+                                            th:value="${uf}"
+                                            th:text="${uf}"
+                                            th:selected="${uf == reclamacao.estado}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="numeroNota">Nº da Nota Fiscal</label>
+                                <input type="text" id="numeroNota" name="numeroNota"
+                                       class="form-control" placeholder="NF-000000"
+                                       th:value="${reclamacao.numeroNota}"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="dataNota">Data da Nota</label>
+                                <input type="date" id="dataNota" name="dataNota"
+                                       class="form-control"
+                                       th:value="${reclamacao.dataNota}"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dataOcorrencia">Data da Ocorrência</label>
+                                <input type="date" id="dataOcorrencia" name="dataOcorrencia"
+                                       class="form-control"
+                                       th:value="${reclamacao.dataOcorrencia}"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="situacao">Situação</label>
+                                <select id="situacao" name="situacao" class="form-control">
+                                    <option value="Aberta"     th:selected="${reclamacao.situacao == 'Aberta'}">Aberta</option>
+                                    <option value="Em Análise" th:selected="${reclamacao.situacao == 'Em Análise'}">Em Análise</option>
+                                    <option value="Concluída"  th:selected="${reclamacao.situacao == 'Concluída'}">Concluída</option>
+                                    <option value="Cancelada"  th:selected="${reclamacao.situacao == 'Cancelada'}">Cancelada</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="valor">Valor (R$)</label>
+                                <input type="number" id="valor" name="valor" step="0.01"
+                                       class="form-control" placeholder="0,00"
+                                       th:value="${reclamacao.valor}"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="quantidade">Quantidade</label>
+                                <input type="number" id="quantidade" name="quantidade"
+                                       class="form-control" placeholder="0"
+                                       th:value="${reclamacao.quantidade}"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: Detalhes do Problema -->
+            <div>
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <span class="section-icon">📝</span>
+                        <h3>Detalhes do Problema</h3>
+                    </div>
+                    <div class="form-card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="descricaoDefeito">Descrição do Defeito *</label>
+                                <textarea id="descricaoDefeito" name="descricaoDefeito"
+                                          class="form-control" rows="5"
+                                          placeholder="Descreva detalhadamente o defeito ou problema relatado..."
+                                          th:text="${reclamacao.descricaoDefeito}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="itensEnvolvidos">Itens Envolvidos</label>
+                                <textarea id="itensEnvolvidos" name="itensEnvolvidos"
+                                          class="form-control" rows="4"
+                                          placeholder="Código e descrição dos itens envolvidos na reclamação..."
+                                          th:text="${reclamacao.itensEnvolvidos}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="observacoes">Observações</label>
+                                <textarea id="observacoes" name="observacoes"
+                                          class="form-control" rows="3"
+                                          placeholder="Observações adicionais..."
+                                          th:text="${reclamacao.observacoes}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="responsavel">Responsável</label>
+                                <input type="text" id="responsavel" name="responsavel"
+                                       class="form-control" placeholder="Nome do responsável"
+                                       th:value="${reclamacao.responsavel}"/>
+                            </div>
+                            <div class="form-group">
+                                <label>Data de Registro</label>
+                                <input type="text" class="form-control"
+                                       th:value="${reclamacao.dataRegistro != null ? #temporals.format(reclamacao.dataRegistro, 'dd/MM/yyyy HH:mm') : 'Automático'}"
+                                       readonly style="opacity:0.6; cursor:default;"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="d-flex gap-8 mt-16">
+            <button type="submit" id="btn-salvar" class="btn btn-primary">💾 Salvar</button>
+            <a href="/reclamacoes" class="btn btn-secondary">✕ Cancelar</a>
+        </div>
+    </form>
+</main>
+
+</body>
+</html>
