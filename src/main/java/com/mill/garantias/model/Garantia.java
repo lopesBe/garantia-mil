@@ -29,7 +29,7 @@ public class Garantia {
     @Column(name = "data_solicitacao")
     private LocalDate dataSolicitacao;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reclamacao_id")
     private Reclamacao reclamacao;
 

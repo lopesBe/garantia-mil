@@ -1,0 +1,13 @@
+# Build outputs
+/target/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Windows
+Thumbs.db
+.DS_Store
+
+# Uploads
+/uploads/

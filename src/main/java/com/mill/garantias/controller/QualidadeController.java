@@ -2,8 +2,11 @@ package com.mill.garantias.controller;
 
 import com.mill.garantias.model.AnaliseQualidade;
 import com.mill.garantias.service.AnaliseQualidadeService;
+import com.mill.garantias.service.AnexoAnaliseService;
 import com.mill.garantias.service.GarantiaService;
 import com.mill.garantias.service.ReclamacaoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,10 +15,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.Collections;
 
 @Controller
 @RequestMapping("/qualidade")
 public class QualidadeController {
+
+    private static final Logger logger = LoggerFactory.getLogger(QualidadeController.class);
 
     @Autowired
     private AnaliseQualidadeService analiseService;
@@ -25,6 +31,9 @@ public class QualidadeController {
 
     @Autowired
     private GarantiaService garantiaService;
+
+    @Autowired
+    private AnexoAnaliseService anexoAnaliseService;
 
     @GetMapping
     public String lista(
@@ -53,16 +62,19 @@ public class QualidadeController {
         model.addAttribute("titulo", "Nova Análise de Qualidade");
         model.addAttribute("reclamacoes", reclamacaoService.listarTodas());
         model.addAttribute("garantias", garantiaService.listarTodas());
+        model.addAttribute("anexos", java.util.Collections.emptyList());
         return "qualidade/formulario";
     }
 
     @GetMapping("/{id}/editar")
     public String editarForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttrs) {
+        logger.info("Solicitação de edição recebida para análise de qualidade id={}", id);
         return analiseService.buscarPorId(id).map(a -> {
             model.addAttribute("analise", a);
             model.addAttribute("titulo", "Editar Análise de Qualidade");
             model.addAttribute("reclamacoes", reclamacaoService.listarTodas());
             model.addAttribute("garantias", garantiaService.listarTodas());
+            model.addAttribute("anexos", anexoAnaliseService.listarPorAnalise(id));
             return "qualidade/formulario";
         }).orElseGet(() -> {
             redirectAttrs.addFlashAttribute("erro", "Análise não encontrada.");
@@ -90,8 +102,12 @@ public class QualidadeController {
                 analise.setGarantia(null);
             }
 
-            analiseService.salvar(analise);
+            AnaliseQualidade salva = analiseService.salvar(analise);
             redirectAttrs.addFlashAttribute("sucesso", "Análise salva com sucesso!");
+            // Redireciona para a tela de edição da análise recém-salva para permitir upload de anexos imediatos
+            if (salva != null && salva.getId() != null) {
+                return "redirect:/qualidade/" + salva.getId() + "/editar";
+            }
         } catch (Exception e) {
             redirectAttrs.addFlashAttribute("erro", "Erro ao salvar análise: " + e.getMessage());
         }

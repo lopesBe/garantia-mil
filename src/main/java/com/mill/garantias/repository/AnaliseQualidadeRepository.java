@@ -15,6 +15,8 @@ public interface AnaliseQualidadeRepository extends JpaRepository<AnaliseQualida
 
     Optional<AnaliseQualidade> findTopByOrderByIdDesc();
 
+    boolean existsByGarantiaId(Long garantiaId);
+
     @Query("SELECT a FROM AnaliseQualidade a WHERE " +
            "(:produto IS NULL OR :produto = '' OR LOWER(a.descricaoProduto) LIKE LOWER(CONCAT('%', :produto, '%')) OR LOWER(a.codigoProduto) LIKE LOWER(CONCAT('%', :produto, '%'))) AND " +
            "(:status IS NULL OR :status = '' OR a.status = :status) AND " +

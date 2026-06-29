@@ -1,8 +1,11 @@
 package com.mill.garantias.model;
 
+import com.mill.garantias.model.AnexoAnalise;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "analises_qualidade")
@@ -15,13 +18,16 @@ public class AnaliseQualidade {
     @Column(nullable = false, unique = true, length = 20)
     private String numero;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reclamacao_id")
     private Reclamacao reclamacao;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "garantia_id")
     private Garantia garantia;
+
+    @OneToMany(mappedBy = "analiseQualidade", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<AnexoAnalise> anexos = new ArrayList<>();
 
     @Column(name = "data_analise")
     private LocalDate dataAnalise;
@@ -56,6 +62,9 @@ public class AnaliseQualidade {
     @Column(length = 50)
     private String status;
 
+    @Column(name = "veredito", length = 50)
+    private String veredito;
+
     @Column(name = "data_registro")
     private LocalDateTime dataRegistro;
 
@@ -78,6 +87,9 @@ public class AnaliseQualidade {
 
     public Garantia getGarantia() { return garantia; }
     public void setGarantia(Garantia garantia) { this.garantia = garantia; }
+
+    public List<AnexoAnalise> getAnexos() { return anexos; }
+    public void setAnexos(List<AnexoAnalise> anexos) { this.anexos = anexos; }
 
     public LocalDate getDataAnalise() { return dataAnalise; }
     public void setDataAnalise(LocalDate dataAnalise) { this.dataAnalise = dataAnalise; }
@@ -111,6 +123,9 @@ public class AnaliseQualidade {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getVeredito() { return veredito; }
+    public void setVeredito(String veredito) { this.veredito = veredito; }
 
     public LocalDateTime getDataRegistro() { return dataRegistro; }
     public void setDataRegistro(LocalDateTime dataRegistro) { this.dataRegistro = dataRegistro; }

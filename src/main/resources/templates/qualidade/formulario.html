@@ -48,6 +48,35 @@
     <form th:action="@{/qualidade/salvar}" method="post" id="form-analise">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" name="id" th:value="${analise.id}"/>
+        <input type="hidden" name="numero" th:value="${analise.numero}"/>
+
+        <!-- DADOS DA GARANTIA VINCULADA (Somente Leitura) -->
+        <div th:if="${analise.garantia != null}" class="form-card" style="margin-bottom:20px;">
+            <div class="form-card-header">
+                <span class="section-icon">📜</span>
+                <h3>Dados da Garantia Vinculada (Somente Leitura)</h3>
+            </div>
+            <div class="form-card-body">
+                <div class="form-grid form-grid-3">
+                    <div class="form-group">
+                        <label>Número da Garantia</label>
+                        <input type="text" class="form-control" th:value="${analise.garantia.numero}" readonly style="opacity:0.8;background-color:#444;"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Solicitação</label>
+                        <input type="text" class="form-control" th:value="${analise.garantia.dataSolicitacao != null ? #temporals.format(analise.garantia.dataSolicitacao, 'dd/MM/yyyy') : '-'}" readonly style="opacity:0.8;background-color:#444;"/>
+                    </div>
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" class="form-control" th:value="${analise.garantia.nomeCliente}" readonly style="opacity:0.8;background-color:#444;"/>
+                    </div>
+                    <div class="form-group col-span-3">
+                        <label>Reclamação Vinculada à Garantia</label>
+                        <input type="text" class="form-control" th:value="${analise.garantia.reclamacao != null ? analise.garantia.reclamacao.numero + ' — ' + analise.garantia.reclamacao.nomeCliente : 'Nenhuma'}" readonly style="opacity:0.8;background-color:#444;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- SEÇÃO 1: Identificação -->
         <div class="form-card" style="margin-bottom:20px;">
@@ -84,7 +113,7 @@
                     </div>
                     <div class="form-group">
                         <label for="reclamacaoId">Reclamação Vinculada</label>
-                        <select id="reclamacaoId" name="reclamacaoId" class="form-control">
+                        <select id="reclamacaoId" name="reclamacaoId" class="form-control" th:disabled="${analise.garantia != null}">
                             <option value="">— Nenhuma —</option>
                             <option th:each="rec : ${reclamacoes}"
                                     th:value="${rec.id}"
@@ -92,10 +121,11 @@
                                     th:selected="${analise.reclamacao != null and analise.reclamacao.id == rec.id}">
                             </option>
                         </select>
+                        <input type="hidden" name="reclamacaoId" th:if="${analise.garantia != null}" th:value="${analise.reclamacao != null ? analise.reclamacao.id : ''}"/>
                     </div>
                     <div class="form-group">
                         <label for="garantiaId">Garantia Vinculada</label>
-                        <select id="garantiaId" name="garantiaId" class="form-control">
+                        <select id="garantiaId" name="garantiaId" class="form-control" th:disabled="${analise.garantia != null}">
                             <option value="">— Nenhuma —</option>
                             <option th:each="gar : ${garantias}"
                                     th:value="${gar.id}"
@@ -103,6 +133,7 @@
                                     th:selected="${analise.garantia != null and analise.garantia.id == gar.id}">
                             </option>
                         </select>
+                        <input type="hidden" name="garantiaId" th:if="${analise.garantia != null}" th:value="${analise.garantia != null ? analise.garantia.id : ''}"/>
                     </div>
                 </div>
             </div>
@@ -119,13 +150,17 @@
                     <div class="form-group">
                         <label for="codigoProduto">Código do Produto</label>
                         <input type="text" id="codigoProduto" name="codigoProduto" class="form-control"
-                               placeholder="CÓD-001" th:value="${analise.codigoProduto}"/>
+                               placeholder="CÓD-001" th:value="${analise.codigoProduto}"
+                               th:readonly="${analise.garantia != null}"
+                               th:style="${analise.garantia != null ? 'opacity:0.8;background-color:#444;' : ''}"/>
                     </div>
                     <div class="form-group">
                         <label for="descricaoProduto">Descrição do Produto *</label>
                         <input type="text" id="descricaoProduto" name="descricaoProduto" class="form-control" required
                                placeholder="Descrição completa do produto"
-                               th:value="${analise.descricaoProduto}"/>
+                               th:value="${analise.descricaoProduto}"
+                               th:readonly="${analise.garantia != null}"
+                               th:style="${analise.garantia != null ? 'opacity:0.8;background-color:#444;' : ''}"/>
                     </div>
                     <div class="form-group">
                         <label for="loteSerie">Lote / Série</label>
@@ -149,6 +184,14 @@
             </div>
             <div class="form-card-body">
                 <div class="form-grid form-grid-2">
+                    <div class="form-group col-span-2">
+                        <label for="veredito">Veredito Final *</label>
+                        <select id="veredito" name="veredito" class="form-control" required>
+                            <option value="" th:selected="${analise.veredito == null or analise.veredito == ''}">— Selecione o Veredito —</option>
+                            <option value="Procedente" th:selected="${analise.veredito == 'Procedente'}">Procedente</option>
+                            <option value="Improcedente" th:selected="${analise.veredito == 'Improcedente'}">Improcedente</option>
+                        </select>
+                    </div>
                     <div class="form-group col-span-2">
                         <label for="evidencias">Evidências Encontradas</label>
                         <textarea id="evidencias" name="evidencias" class="form-control" rows="4"
@@ -183,6 +226,60 @@
             <a href="/qualidade" class="btn btn-secondary">✕ Cancelar</a>
         </div>
     </form>
+
+    <div class="form-card" style="margin-bottom:20px; margin-top:20px;" th:if="${analise.id != null}">
+        <div class="form-card-header">
+            <span class="section-icon">📎</span>
+            <h3>Anexos da Análise</h3>
+        </div>
+        <div class="form-card-body">
+            <div class="form-group">
+                <form th:action="@{/anexos/upload/{analiseId}(analiseId=${analise.id})}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <label for="files">Enviar arquivos</label>
+                    <input type="file" id="files" name="files" multiple class="form-control"/>
+                    <button type="submit" class="btn btn-primary" style="margin-top:12px;">📤 Enviar Anexos</button>
+                </form>
+            </div>
+            <div th:if="${anexos != null and #lists.isNotEmpty(anexos)}" class="form-group">
+                <label>Anexos já enviados</label>
+                <div class="table-container" style="margin-top:10px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome do arquivo</th>
+                                <th>Tipo</th>
+                                <th>Data de upload</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="anexo : ${anexos}">
+                                <td th:text="${anexo.nomeArquivo}"></td>
+                                <td th:text="${anexo.tipo}"></td>
+                                <td th:text="${anexo.dataUpload != null ? #temporals.format(anexo.dataUpload, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                                <td class="text-right">
+                                    <a th:href="@{/anexos/download/{id}(id=${anexo.id})}" class="btn btn-secondary btn-sm">Baixar</a>
+                                    <form th:action="@{/anexos/delete/{id}(id=${anexo.id})}" method="post" style="display:inline; margin-left:8px;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div th:if="${anexos == null or #lists.isEmpty(anexos)}" class="form-group">
+                <p class="text-muted">Nenhum anexo enviado ainda.</p>
+            </div>
+        </div>
+    </div>
+    <div class="form-card" th:if="${analise.id == null}" style="margin-top:20px;">
+        <div class="form-card-body">
+            <p class="text-muted">Salve a análise antes de enviar anexos.</p>
+        </div>
+    </div>
 </main>
 
 </body>

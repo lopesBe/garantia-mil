@@ -7,7 +7,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import com.mill.garantias.model.Garantia;
+import com.mill.garantias.repository.GarantiaRepository;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -15,6 +19,9 @@ public class AnaliseQualidadeService {
 
     @Autowired
     private AnaliseQualidadeRepository analiseRepository;
+
+    @Autowired
+    private GarantiaRepository garantiaRepository;
 
     public Page<AnaliseQualidade> listar(String produto, String status, String numero, Pageable pageable) {
         return analiseRepository.findWithFilters(produto, status, numero, pageable);
@@ -28,8 +35,47 @@ public class AnaliseQualidadeService {
     public AnaliseQualidade salvar(AnaliseQualidade analise) {
         if (analise.getId() == null) {
             analise.setNumero(gerarNumero());
+        } else {
+            if (!StringUtils.hasText(analise.getNumero())) {
+                analiseRepository.findById(analise.getId()).ifPresent(existente -> {
+                    analise.setNumero(existente.getNumero());
+                });
+            }
         }
-        return analiseRepository.save(analise);
+        AnaliseQualidade salva = analiseRepository.save(analise);
+
+        // Se a análise possui uma garantia vinculada, sincroniza o status/decisão
+        if (salva.getGarantia() != null) {
+            Garantia garantia = salva.getGarantia();
+            if ("Procedente".equalsIgnoreCase(salva.getVeredito())) {
+                garantia.setStatus("Procedente");
+                garantia.setConclusao(salva.getConclusaoTecnica());
+                garantia.setResponsavelDecisao(salva.getResponsavelTecnico());
+                garantia.setDataDecisao(LocalDate.now());
+                garantiaRepository.save(garantia);
+            } else if ("Improcedente".equalsIgnoreCase(salva.getVeredito())) {
+                garantia.setStatus("Improcedente");
+                garantia.setConclusao(salva.getConclusaoTecnica());
+                garantia.setResponsavelDecisao(salva.getResponsavelTecnico());
+                garantia.setDataDecisao(LocalDate.now());
+                garantiaRepository.save(garantia);
+            } else if ("Concluída".equalsIgnoreCase(salva.getStatus())) {
+                garantia.setStatus("Concluída");
+                garantia.setConclusao(salva.getConclusaoTecnica());
+                garantia.setResponsavelDecisao(salva.getResponsavelTecnico());
+                garantia.setDataDecisao(LocalDate.now());
+                garantiaRepository.save(garantia);
+            } else if ("Em Andamento".equalsIgnoreCase(salva.getStatus())) {
+                garantia.setStatus("Em Análise");
+                garantiaRepository.save(garantia);
+            }
+        }
+
+        return salva;
+    }
+
+    public boolean existsByGarantiaId(Long garantiaId) {
+        return analiseRepository.existsByGarantiaId(garantiaId);
     }
 
     @Transactional
